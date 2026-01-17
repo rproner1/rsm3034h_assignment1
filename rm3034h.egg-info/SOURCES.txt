@@ -1,0 +1,6 @@
+pyproject.toml
+rm3034h.egg-info/PKG-INFO
+rm3034h.egg-info/SOURCES.txt
+rm3034h.egg-info/dependency_links.txt
+rm3034h.egg-info/requires.txt
+rm3034h.egg-info/top_level.txt

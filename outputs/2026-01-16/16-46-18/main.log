@@ -1,0 +1,3 @@
+[2026-01-16 16:46:18,356][root][INFO] - Setting up matplotlib configuration
+[2026-01-16 16:46:18,360][root][INFO] - Downloading Fama-French Size Breakpoints data...
+[2026-01-16 16:46:18,591][root][INFO] - Fama-French Size Breakpoints data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff_size_breakpoints_20260116_214618.parquet.

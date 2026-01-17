@@ -1,0 +1,26 @@
+Metadata-Version: 2.4
+Name: rm3034h
+Version: 0.1.0
+Summary: Add your description here
+Requires-Python: <3.13,>=3.12
+Description-Content-Type: text/markdown
+Requires-Dist: wrds>=3.3.0
+Requires-Dist: dotenv>=0.9.9
+Requires-Dist: ipykernel>=6.29.5
+Requires-Dist: jupyter>=1.1.1
+Requires-Dist: linearmodels>=6.1
+Requires-Dist: matplotlib>=3.10.3
+Requires-Dist: numpy>=2.3.0
+Requires-Dist: pandas>=2.2.3
+Requires-Dist: polars>=1.30.0
+Requires-Dist: pyarrow>=20.0.0
+Requires-Dist: seaborn>=0.13.2
+Requires-Dist: statsmodels>=0.14.4
+Requires-Dist: tqdm>=4.67.1
+Requires-Dist: fuzzywuzzy>=0.18.0
+Requires-Dist: pandasql>=0.7.3
+Requires-Dist: hydra-core>=1.3.2
+Requires-Dist: omegaconf>=2.3.0
+Requires-Dist: pystout>=0.0.8
+Requires-Dist: openpyxl>=3.1.5
+Requires-Dist: yfinance>=0.2.65

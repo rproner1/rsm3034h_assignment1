@@ -1,0 +1,31 @@
+[2026-01-16 16:35:35,199][root][INFO] - Setting up matplotlib configuration
+[2026-01-16 16:35:35,204][root][INFO] - Downloading Fama-French Size Breakpoints data...
+[2026-01-16 16:35:35,880][root][INFO] - Fama-French Size Breakpoints data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff_size_breakpoints_20260116_213535.parquet.
+[2026-01-16 16:35:35,881][root][INFO] - Downloading Fama-French 5 Factors Monthly data...
+[2026-01-16 16:35:36,359][root][INFO] - Fama-French 5 Factors Monthly data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260116_213535.parquet.
+[2026-01-16 16:35:36,360][root][INFO] - Downloading Compustat GIC Codes data...
+[2026-01-16 16:35:55,920][root][INFO] - Compustat GIC Codes data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_gic_codes_20260116_213536.parquet.
+[2026-01-16 16:35:55,921][root][INFO] - Downloading Compustat Data data...
+[2026-01-16 16:36:41,332][root][INFO] - Compustat Data data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_20260116_213555.parquet.
+[2026-01-16 16:36:41,333][root][INFO] - Downloading CRSP Monthly Stock File data...
+[2026-01-16 16:36:43,720][root][WARNING] - CRSP Monthly Stock File data download failed, skipping: (psycopg2.errors.UndefinedColumn) column a.altprc does not exist
+LINE 2: ... a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, a.altprc, ...
+                                                             ^
+HINT:  Perhaps you meant to reference the column "a.prc".
+
+[SQL: 
+    select a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, a.altprc, a.prc, a.vol, a.ret,
+    b.ticker, b.comnam, b.exchcd, b.shrcd, b.ncusip
+    from crsp.dsf as a
+    left join crsp.dsenames as b
+    on a.PERMNO=b.PERMNO
+    and b.namedt<=a.date
+    and a.date<=b.nameendt
+    where b.SHRCD between 10 and  11
+    and b.EXCHCD between 1 and  3
+    and a.date >= '20070101' and a.date <= '20241231'  ]
+(Background on this error at: https://sqlalche.me/e/20/f405).
+[2026-01-16 16:36:43,720][root][INFO] - CRSP Monthly Stock File data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_monthly_20260116_213641.parquet.
+[2026-01-16 16:36:43,721][root][INFO] - Downloading CRSP-Compustat Link Table data...
+[2026-01-16 16:36:48,667][root][INFO] - CRSP-Compustat Link Table data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_compu_link_table_20260116_213643.parquet.
+[2026-01-16 16:36:48,667][root][INFO] - Downloading CRSP Adjustment Factors data...

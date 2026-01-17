@@ -1,0 +1,46 @@
+[2026-01-15 13:36:42,025][root][INFO] - Setting up matplotlib configuration
+[2026-01-15 13:36:42,029][root][INFO] - Downloading Fama-French Size Breakpoints data...
+[2026-01-15 13:36:42,692][root][INFO] - Fama-French Size Breakpoints data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff_size_breakpoints_20260115_183642.parquet.
+[2026-01-15 13:36:42,692][root][INFO] - Downloading Fama-French 5 Factors Monthly data...
+[2026-01-15 13:36:42,938][root][INFO] - Fama-French 5 Factors Monthly data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260115_183642.parquet.
+[2026-01-15 13:36:42,938][root][INFO] - Downloading Compustat GIC Codes data...
+[2026-01-15 13:36:47,310][root][INFO] - Compustat GIC Codes data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_gic_codes_20260115_183642.parquet.
+[2026-01-15 13:36:47,310][root][INFO] - Downloading Compustat Monthly Data data...
+[2026-01-15 13:36:50,344][root][WARNING] - Compustat Monthly Data data download failed, skipping: (psycopg2.errors.UndefinedTable) relation "comp.fundm" does not exist
+LINE 4:         from comp.fundm
+                     ^
+
+[SQL: 
+        select gvkey, conm, datadate, rdq, epsfx, epspx, cshom, prccm, 
+               ajexm, spim, cshprm, cshfdm, salem, atm, fyr, ffom, fdatem, datafqtr, cshom*prccm as mcap
+        from comp.fundm
+        where consol='C' and popsrc='D' and indfmt='INDL' and datafmt='STD'
+          and datadate between '01/01/1999' and '12/31/2024'
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405).
+[2026-01-15 13:36:50,344][root][INFO] - Compustat Monthly Data data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_monthly_20260115_183647.parquet.
+[2026-01-15 13:36:50,345][root][INFO] - Downloading CRSP Monthly Stock File data...
+[2026-01-15 13:36:53,451][root][WARNING] - CRSP Monthly Stock File data download failed, skipping: (psycopg2.errors.UndefinedColumn) column a.openprc does not exist
+LINE 3: ...er, b.comnam, b.exchcd, b.shrcd, b.ncusip, a.prc, a.openprc,...
+                                                             ^
+
+[SQL: 
+    select a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, 
+    b.ticker, b.comnam, b.exchcd, b.shrcd, b.ncusip, a.prc, a.openprc, a.vol, a.ret, a.retx
+    from crsp.msf as a
+    left join crsp.dsenames as b
+    on a.PERMNO=b.PERMNO
+    and b.namedt<=a.date
+    and a.date<=b.nameendt
+    where b.SHRCD between 10 and  11
+    and b.EXCHCD between 1 and  3
+    and a.date >= '20070101' and a.date <= '20241231'  ]
+(Background on this error at: https://sqlalche.me/e/20/f405).
+[2026-01-15 13:36:53,451][root][INFO] - CRSP Monthly Stock File data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_monthly_20260115_183650.parquet.
+[2026-01-15 13:36:53,452][root][INFO] - Downloading CRSP-Compustat Link Table data...
+[2026-01-15 13:36:57,333][root][INFO] - CRSP-Compustat Link Table data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_compu_link_table_20260115_183653.parquet.
+[2026-01-15 13:36:57,333][root][INFO] - Downloading CRSP Adjustment Factors data...
+[2026-01-15 13:44:40,245][root][INFO] - CRSP Adjustment Factors data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_cfacshr_20260115_183657.parquet.
+[2026-01-15 13:44:40,245][root][INFO] - Downloading CRSP Trading Dates data...
+[2026-01-15 13:44:43,936][root][INFO] - CRSP Trading Dates data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_dates_20260115_184440.parquet.
+[2026-01-15 13:44:43,937][root][INFO] - Building panel data...

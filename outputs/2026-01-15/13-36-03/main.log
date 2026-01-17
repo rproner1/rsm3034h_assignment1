@@ -1,0 +1,30 @@
+[2026-01-15 13:36:03,800][root][INFO] - Setting up matplotlib configuration
+[2026-01-15 13:36:03,803][root][INFO] - Downloading Fama-French Size Breakpoints data...
+[2026-01-15 13:36:03,804][root][INFO] - Fama-French Size Breakpoints data already downloaded, skipping.
+[2026-01-15 13:36:03,804][root][INFO] - Downloading Fama-French 5 Factors Monthly data...
+[2026-01-15 13:36:03,804][root][INFO] - Fama-French 5 Factors Monthly data already downloaded, skipping.
+[2026-01-15 13:36:03,804][root][INFO] - Downloading Compustat GIC Codes data...
+[2026-01-15 13:36:03,804][root][INFO] - Compustat GIC Codes data already downloaded, skipping.
+[2026-01-15 13:36:03,804][root][INFO] - Downloading Compustat Monthly Data data...
+[2026-01-15 13:36:07,032][root][WARNING] - Compustat Monthly Data data download failed, skipping: (psycopg2.errors.UndefinedTable) relation "comp.fundm" does not exist
+LINE 4:         from comp.fundm
+                     ^
+
+[SQL: 
+        select gvkey, conm, datadate, rdq, epsfx, epspx, cshom, prccm, 
+               ajexm, spim, cshprm, cshfdm, salem, atm, fyr, ffom, fdatem, datafqtr, cshom*prccm as mcap
+        from comp.fundm
+        where consol='C' and popsrc='D' and indfmt='INDL' and datafmt='STD'
+          and datadate between '01/01/1999' and '12/31/2024'
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405).
+[2026-01-15 13:36:07,032][root][INFO] - Compustat Monthly Data data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_monthly_20260115_183603.parquet.
+[2026-01-15 13:36:07,033][root][INFO] - Downloading CRSP Monthly Stock File data...
+[2026-01-15 13:36:07,035][root][INFO] - CRSP Monthly Stock File data already downloaded, skipping.
+[2026-01-15 13:36:07,035][root][INFO] - Downloading CRSP-Compustat Link Table data...
+[2026-01-15 13:36:07,036][root][INFO] - CRSP-Compustat Link Table data already downloaded, skipping.
+[2026-01-15 13:36:07,036][root][INFO] - Downloading CRSP Adjustment Factors data...
+[2026-01-15 13:36:07,037][root][INFO] - CRSP Adjustment Factors data already downloaded, skipping.
+[2026-01-15 13:36:07,038][root][INFO] - Downloading CRSP Trading Dates data...
+[2026-01-15 13:36:07,039][root][INFO] - CRSP Trading Dates data already downloaded, skipping.
+[2026-01-15 13:36:07,041][root][INFO] - Building panel data...

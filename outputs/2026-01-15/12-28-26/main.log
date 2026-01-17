@@ -1,0 +1,30 @@
+[2026-01-15 12:28:26,846][root][INFO] - Setting up matplotlib configuration
+[2026-01-15 12:28:26,864][root][INFO] - Downloading Fama-French Size Breakpoints data...
+[2026-01-15 12:28:27,375][root][INFO] - Fama-French Size Breakpoints data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff_size_breakpoints_20260115_172826.parquet.
+[2026-01-15 12:28:27,375][root][INFO] - Downloading Fama-French 5 Factors Monthly data...
+[2026-01-15 12:28:27,622][root][INFO] - Fama-French 5 Factors Monthly data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260115_172827.parquet.
+[2026-01-15 12:28:27,622][root][INFO] - Downloading Compustat GIC Codes data...
+[2026-01-15 12:28:33,315][root][INFO] - Compustat GIC Codes data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_gic_codes_20260115_172827.parquet.
+[2026-01-15 12:28:33,315][root][INFO] - Downloading Compustat Monthly Data data...
+[2026-01-15 12:28:36,209][root][WARNING] - Compustat Monthly Data data download failed, skipping: (psycopg2.errors.UndefinedTable) relation "comp.fundm" does not exist
+LINE 4:         from comp.fundm
+                     ^
+
+[SQL: 
+        select gvkey, conm, datadate, rdq, epsfx, epspx, cshom, prccm, 
+               ajexm, spim, cshprm, cshfdm, salem, atm, fyr, ffom, fdatem, datafqtr, cshom*prccm as mcap
+        from comp.fundm
+        where consol='C' and popsrc='D' and indfmt='INDL' and datafmt='STD'
+          and datadate between '01/01/1999' and '12/31/2024'
+    ]
+(Background on this error at: https://sqlalche.me/e/20/f405).
+[2026-01-15 12:28:36,209][root][INFO] - Compustat Monthly Data data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_monthly_20260115_172833.parquet.
+[2026-01-15 12:28:36,209][root][INFO] - Downloading CRSP Monthly Stock File data...
+[2026-01-15 12:29:09,054][root][INFO] - CRSP Monthly Stock File data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_monthly_20260115_172836.parquet.
+[2026-01-15 12:29:09,054][root][INFO] - Downloading CRSP-Compustat Link Table data...
+[2026-01-15 12:29:18,080][root][INFO] - CRSP-Compustat Link Table data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_compu_link_table_20260115_172909.parquet.
+[2026-01-15 12:29:18,081][root][INFO] - Downloading CRSP Adjustment Factors data...
+[2026-01-15 12:35:46,222][root][INFO] - CRSP Adjustment Factors data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_cfacshr_20260115_172918.parquet.
+[2026-01-15 12:35:46,222][root][INFO] - Downloading CRSP Trading Dates data...
+[2026-01-15 12:35:49,685][root][INFO] - CRSP Trading Dates data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_dates_20260115_173546.parquet.
+[2026-01-15 12:35:49,687][root][INFO] - Building panel data...
