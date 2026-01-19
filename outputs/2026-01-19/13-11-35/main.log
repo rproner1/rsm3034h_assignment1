@@ -1,0 +1,5 @@
+[2026-01-19 13:11:35,470][root][INFO] - Setting up matplotlib configuration
+[2026-01-19 13:11:35,470][root][INFO] - Building panel data...
+[2026-01-19 13:28:24,277][root][INFO] - Panel built. Shape: (1149309, 17)
+[2026-01-19 13:28:30,532][root][INFO] - Panel data saved to /home/rproner/Documents/Data/rsm3034_assignment1/clean/panel_data.parquet
+[2026-01-19 13:28:34,399][root][INFO] - Loaded Fama-French data from /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260119_153310.parquet

@@ -10,13 +10,17 @@ def get_compustat(
     """
     Retrieve data from Compustat.
     """
-    query = f"""
-        select gvkey, datadate, seq, ceq, at, lt, txditc, txdb, itcb,  pstkrv,
-        pstkl, pstk, capx, oancf, sale, cogs, xint, xsga 
-        from comp.funda
-        where consol='C' and popsrc='D' and indfmt='INDL' and datafmt='STD'
-        and datadate between '{start_date}' and '{end_date}'
-    """
+    query = (
+        "SELECT gvkey, datadate, seq, ceq, at, lt, txditc, txdb, itcb,  pstkrv, "
+        "pstkl, pstk, capx, oancf, sale, cogs, xint, xsga "
+        "FROM comp.funda "
+        "WHERE indfmt = 'INDL' "
+        "AND datafmt = 'STD' "
+        "AND consol = 'C' "
+        "AND curcd = 'USD' "
+        f"AND datadate BETWEEN '{start_date}' AND '{end_date}'"
+    )
+
 
     conn = wrds.Connection(wrds_username=wrds_username, wrds_password=wrds_password)
     funda = conn.raw_sql(query, date_cols=["datadate"])

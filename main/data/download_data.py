@@ -60,7 +60,7 @@ def download_files(
     wrds_username: Optional[str] = None,
     wrds_password: Optional[str] = None,
     start_date: Optional[str] = '1926-07-01',
-    end_date: Optional[str] = '2025-12-31'
+    end_date: Optional[str] = '2024-12-31'
 ) -> None:
     """
     Downloads all necessary data files.

@@ -3,27 +3,17 @@ matplotlib:
   font:
     family: serif
     sans_serif:
-      - Helvetica
+    - Helvetica
     serif:
-      - "Computer Modern Roman"
-
+    - Computer Modern Roman
 data:
   download: false
   ignore_download_cache: false
-  start_date: "1926-07-01"
-  end_date: "2024-12-31"
-
+  start_date: '1926-07-01'
+  end_date: '2024-12-31'
 preprocess:
   compute_earning_surprises: false
-
 tasks:
   build_panel: true
   save_panel: true
   load_panel: false
-
-# figures:
-#   n_stocks_per_year: true
-#   n_earnings_per_year: true
-
-# tables:
-#   ea_regression: true

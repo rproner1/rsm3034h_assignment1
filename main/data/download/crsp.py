@@ -22,23 +22,44 @@ def get_crsp_monthly(
 
     conn = wrds.Connection(wrds_username=wrds_username, wrds_password=wrds_password)
 
-    query = f"""
-    select a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, a.prc, a.vol, a.ret,
-    b.ticker, b.comnam, b.exchcd, b.shrcd, b.ncusip
-    from crsp.msf as a
-    left join crsp.dsenames as b
-    on a.PERMNO=b.PERMNO
-    and b.namedt<=a.date
-    and a.date<=b.nameendt
-    where b.SHRCD between 10 and  11
-    and b.EXCHCD between 1 and  3
-    and a.date >= '{start_date}' and a.date <= '{end_date}'  """
+    # query = f"""
+    # select a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, a.prc, a.vol, a.ret,
+    # b.ticker, b.comnam, b.exchcd, b.shrcd, b.ncusip
+    # from crsp.msf_v2 as a
+    # left join crsp.dsenames as b
+    # on a.PERMNO=b.PERMNO
+    # and b.namedt<=a.date
+    # and a.date<=b.nameendt
+    # where b.SHRCD between 10 and  11
+    # and b.EXCHCD between 1 and  3
+    # and a.date >= '{start_date}' and a.date <= '{end_date}'  """
+
+    query = (
+        "SELECT msf.permno, date_trunc('month', msf.mthcaldt)::date AS date, "
+        "msf.mthret AS ret, msf.shrout, msf.mthprc AS altprc, "
+        "ssih.primaryexch, ssih.siccd "
+        "FROM crsp.msf_v2 AS msf "
+        "INNER JOIN crsp.stksecurityinfohist AS ssih "
+        "ON msf.permno = ssih.permno AND "
+        "ssih.secinfostartdt <= msf.mthcaldt AND "
+        "msf.mthcaldt <= ssih.secinfoenddt "
+        f"WHERE msf.mthcaldt BETWEEN '{start_date}' AND '{end_date}' "
+        "AND ssih.sharetype = 'NS' "
+        "AND ssih.securitytype = 'EQTY' "  
+        "AND ssih.securitysubtype = 'COM' " 
+        "AND ssih.usincflg = 'Y' " 
+        "AND ssih.issuertype in ('ACOR', 'CORP') " 
+        "AND ssih.primaryexch in ('N', 'A', 'Q') "
+        "AND ssih.conditionaltype in ('RW', 'NW') "
+        "AND ssih.tradingstatusflg = 'A'"
+    )
 
     df = conn.raw_sql(query)
     df["date"] = pd.to_datetime(df["date"])
+
     # push date to the end of the month
     df["date"] = df["date"] + pd.offsets.MonthEnd(0)
-    df["prc"] = np.abs(df["prc"])
+    df["altprc"] = np.abs(df["altprc"])
     df["permno"] = df["permno"].astype(int)
 
     conn.close()
@@ -60,12 +81,12 @@ def get_crsp_compu_link_table(
 
     conn = wrds.Connection(wrds_username=wrds_username, wrds_password=wrds_password)
 
-    query = """
-    SELECT *
-    FROM crsp.ccmxpf_linktable
-    WHERE usedflag = 1
-    AND linkprim IN ('P', 'C')
-    """
+    query = (
+        "SELECT lpermno AS permno, gvkey, linkdt, linkenddt"
+        "FROM crsp.ccmxpf_linktable "
+        "WHERE linktype IN ('LU', 'LC') "
+        "AND linkprim IN ('P', 'C')"
+    )
 
     # Execute the query
     data = conn.raw_sql(query)

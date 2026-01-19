@@ -1,0 +1,31 @@
+[2026-01-19 09:50:44,165][root][INFO] - Setting up matplotlib configuration
+[2026-01-19 09:50:44,173][root][INFO] - Downloading Fama-French Size Breakpoints data...
+[2026-01-19 09:50:44,825][root][INFO] - Fama-French Size Breakpoints data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff_size_breakpoints_20260119_145044.parquet.
+[2026-01-19 09:50:44,825][root][INFO] - Downloading Fama-French 5 Factors Monthly data...
+[2026-01-19 09:50:45,098][root][INFO] - Fama-French 5 Factors Monthly data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260119_145044.parquet.
+[2026-01-19 09:50:45,098][root][INFO] - Downloading Compustat data...
+[2026-01-19 09:51:17,812][root][INFO] - Compustat data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/compustat_20260119_145045.parquet.
+[2026-01-19 09:51:17,812][root][INFO] - Downloading CRSP Monthly Stock File data...
+[2026-01-19 09:51:19,060][root][WARNING] - CRSP Monthly Stock File data download failed, skipping: (psycopg2.errors.UndefinedColumn) column a.date does not exist
+LINE 7:     and b.namedt<=a.date
+                          ^
+
+[SQL: 
+    select a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, a.prc, a.vol, a.ret,
+    b.ticker, b.comnam, b.exchcd, b.shrcd, b.ncusip
+    from crsp.msf_v2 as a
+    left join crsp.dsenames as b
+    on a.PERMNO=b.PERMNO
+    and b.namedt<=a.date
+    and a.date<=b.nameendt
+    where b.SHRCD between 10 and  11
+    and b.EXCHCD between 1 and  3
+    and a.date >= '19260701' and a.date <= '20241231'  ]
+(Background on this error at: https://sqlalche.me/e/20/f405).
+[2026-01-19 09:51:19,060][root][INFO] - CRSP Monthly Stock File data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_monthly_20260119_145117.parquet.
+[2026-01-19 09:51:19,061][root][INFO] - Downloading CRSP-Compustat Link Table data...
+[2026-01-19 09:51:21,578][root][INFO] - CRSP-Compustat Link Table data download complete to /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/crsp_compu_link_table_20260119_145119.parquet.
+[2026-01-19 09:51:21,578][root][INFO] - Building panel data...
+[2026-01-19 10:06:00,824][root][INFO] - Panel built. Shape: (1154583, 21)
+[2026-01-19 10:06:03,596][root][INFO] - Panel data saved to /home/rproner/Documents/Data/rsm3034_assignment1/clean/panel_data.parquet
+[2026-01-19 10:06:05,737][root][INFO] - Loaded Fama-French data from /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260119_145044.parquet
