@@ -33,7 +33,7 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
         get_latest_file(path / "crsp_compu_link_table.parquet")
     ).rename(columns={"lpermno": "permno"})
     link_tab = link_tab[["gvkey", "permno", "linkdt", "linkenddt"]]
-    link_tab["linkenddt"] = link_tab["linkenddt"].fillna(pd.to_datetime(CRSP_END_DATE))
+    link_tab["linkenddt"] = link_tab["linkenddt"].fillna(pd.to_datetime(end_date))
     crsp = crsp.merge(link_tab, on="permno", how="left")
     crsp = crsp[crsp["date"].between(crsp["linkdt"], crsp["linkenddt"])]
     crsp = crsp.drop(columns=["linkdt", "linkenddt"])
@@ -48,7 +48,7 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     crsp['ret_excess'] = crsp['ret'] - crsp['rf']
     crsp['ret_excess'] = crsp['ret_excess'].clip(lower=-1)
     crsp = crsp.drop(columns=['rf'])
-    # crsp = crsp.dropna(subset=['ret_excess', 'mktcap', 'mktcap_lag'])
+    # crsp = crsp.dropna(subset=['ret_excess', 'mktcap', 'mktcap_lag']) # Problematic. Results in no december entries
 
     return crsp
 

@@ -5,7 +5,7 @@ def get_compustat(
     wrds_username: str,
     wrds_password: str,
     start_date: str = "07/01/1926",
-    end_date: str = "12/31/2025",
+    end_date: str = "12/31/2024",
 ):
     """
     Retrieve data from Compustat.
