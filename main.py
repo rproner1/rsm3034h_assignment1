@@ -136,6 +136,10 @@ def main(cfg: DictConfig):
         "ret": np.average(x["ret_excess"], weights=x["mktcap_lag"])
         })
         )
+    )
+    print(hml.head())
+
+    hml = (hml
         .reset_index()
         .groupby('date')
         .apply(lambda x: pd.Series({
@@ -144,7 +148,6 @@ def main(cfg: DictConfig):
         )
         .reset_index()
     )
-    print(hml.head())
 
     # Evaluate replication using evaluation function from evaluation module
     # load latest Fama-French CSV with names like "ff5_monthly_YYYYMMDD_HHMMSS.csv"

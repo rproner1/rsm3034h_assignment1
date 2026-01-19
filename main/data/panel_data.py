@@ -8,39 +8,69 @@ from ..utils import get_latest_file
 
 load_dotenv()
 
+def assign_exchange(primaryexch):
+    if primaryexch == "N":
+        return "NYSE"
+    elif primaryexch == "A":
+        return "AMEX"
+    elif primaryexch == "Q":
+        return "NASDAQ"
+    else:
+        return "Other"
+    
+def assign_industry(siccd):
+    if 1 <= siccd <= 999:
+        return "Agriculture"
+    elif 1000 <= siccd <= 1499:
+        return "Mining"
+    elif 1500 <= siccd <= 1799:
+        return "Construction"
+    elif 2000 <= siccd <= 3999:
+        return "Manufacturing"
+    elif 4000 <= siccd <= 4899:
+        return "Transportation"
+    elif 4900 <= siccd <= 4999:
+        return "Utilities"
+    elif 5000 <= siccd <= 5199:
+        return "Wholesale"
+    elif 5200 <= siccd <= 5999:
+        return "Retail"
+    elif 6000 <= siccd <= 6799:
+        return "Finance"
+    elif 7000 <= siccd <= 8999:
+        return "Services"
+    elif 9000 <= siccd <= 9999:
+        return "Public"
+    else:
+        return "Missing"
+
 
 # load crsp file
 def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
-    print(path, get_latest_file(path / "crsp_monthly.parquet"))
+    
     crsp = pd.read_parquet(get_latest_file(path / "crsp_monthly.parquet"))
     crsp = crsp[(crsp["date"] >= start_date) & (crsp["date"] <= end_date)] 
     crsp["year_month"] = crsp["date"].dt.to_period("M")
     crsp = crsp.rename(columns={"ncusip": "cusip"})
 
     # Compute market cap (ME) and scale by millions
-    crsp['mktcap'] = crsp['shrout'] * crsp['prc'] / 1000000
+    crsp['mktcap'] = crsp['shrout'] * crsp['altprc'] / 1000000
     crsp['mktcap'] = crsp['mktcap'].replace(0, np.nan)
     
-    # 
+    print(crsp[crsp.date.dt.month == 12])
+    # create lagged market cap
     mktcap_lag = crsp.copy()
-    mktcap_lag['date'] = mktcap_lag['date'] + pd.DateOffset(months=1)
+    mktcap_lag['date'] = mktcap_lag['date'] + pd.offsets.MonthEnd(1)
     mktcap_lag = mktcap_lag.rename(columns={"mktcap": "mktcap_lag"})
     mktcap_lag = mktcap_lag[["permno", "date", "mktcap_lag"]]
     crsp = crsp.merge(mktcap_lag, on=["permno", "date"], how="left")
+    print(crsp[crsp.date.dt.month == 12])
 
-    # merge on permno and select only the dates where the link is valid
-    link_tab = pd.read_parquet(
-        get_latest_file(path / "crsp_compu_link_table.parquet")
-    ).rename(columns={"lpermno": "permno"})
-    link_tab = link_tab[["gvkey", "permno", "linkdt", "linkenddt"]]
-    link_tab["linkenddt"] = link_tab["linkenddt"].fillna(pd.to_datetime(end_date))
-    crsp = crsp.merge(link_tab, on="permno", how="left")
-    crsp = crsp[crsp["date"].between(crsp["linkdt"], crsp["linkenddt"])]
-    crsp = crsp.drop(columns=["linkdt", "linkenddt"])
-    # drop_duplicates
-    crsp = crsp.drop_duplicates(subset=["permno", "date"])
+    # Rename exchange code and industry code.
+    crsp['exchange'] = crsp['primaryexch'].apply(assign_exchange)
+    crsp['industry'] = crsp['siccd'].apply(assign_industry)
 
-    # Compute excess returs
+    # Compute excess returns
     ff = pd.read_parquet(get_latest_file(path / "ff5_monthly.parquet"))
     rf = ff[['date','rf']]
 
@@ -48,7 +78,22 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     crsp['ret_excess'] = crsp['ret'] - crsp['rf']
     crsp['ret_excess'] = crsp['ret_excess'].clip(lower=-1)
     crsp = crsp.drop(columns=['rf'])
-    # crsp = crsp.dropna(subset=['ret_excess', 'mktcap', 'mktcap_lag']) # Problematic. Results in no december entries
+
+    
+    crsp = crsp.dropna(subset=['ret_excess', 'mktcap', 'mktcap_lag'])
+
+    # merge on permno and select only the dates where the link is valid
+    link_tab = pd.read_parquet(get_latest_file(path / "crsp_compu_link_table.parquet")).rename(columns={"lpermno": "permno"})
+    link_tab["linkenddt"] = link_tab["linkenddt"].fillna(pd.to_datetime(end_date))
+
+    ccm_links = crsp.merge(link_tab, on="permno", how="left")
+    ccm_links = ccm_links.query("~gvkey.isnull() & (date >= linkdt) & (date <= linkenddt)")
+    ccm_links = ccm_links[["gvkey", "permno", "date"]]
+
+    crsp = crsp.merge(ccm_links, on=['permno', 'date'], how='left')
+
+    # drop_duplicates
+    # crsp = crsp.drop_duplicates(subset=["permno", "date"])
 
     return crsp
 
@@ -63,6 +108,8 @@ def load_compustat_data(path: Path) -> pd.DataFrame:
     )
     # Note to self. Try replacing sale with reserves
     comp['be'] = comp['be'].apply(lambda x: np.nan if x <= 0 else x)
+
+
 
     # Calculate operating performance (OP)
     comp['op'] =  ((comp["sale"]-comp["cogs"].fillna(0)-
@@ -79,7 +126,7 @@ def load_compustat_data(path: Path) -> pd.DataFrame:
     compustat_lag = compustat_lag.rename(columns={'at': 'at_lag'})
     comp = comp.merge(compustat_lag, on=['gvkey', 'year'], how='left')
 
-    comp['inv'] = (comp['at'] - comp['at_lag']) / comp['be']
+    comp['inv'] = (comp['at'] / comp['at_lag']) - 1
     comp['inv'] = np.where(comp['at_lag'].fillna(-1) <= 0, np.nan, comp['inv'])
 
     return comp
@@ -112,7 +159,7 @@ def load_fama_french_me_breakpoints(df: pd.DataFrame, path: Path) -> pd.DataFram
 def assign_portfolio(df: pd.DataFrame, sorting_variable: str, percentiles: list) -> pd.Series:
     """Assign portfolios to a bin according to a sorting variable."""
 
-    breakpoints = df[df['exchcd'] == 1]
+    breakpoints = df[df['exchange'] == 'NYSE']
     breakpoints = breakpoints[sorting_variable].quantile([0] + percentiles + [1], interpolation="linear").drop_duplicates()
     breakpoints.iloc[0] = -np.inf
     breakpoints.iloc[breakpoints.size-1] = np.inf
@@ -211,12 +258,12 @@ def build_panel(
     # crsp = crsp.dropna(subset=['mktcap', 'mktcap_lag', 'ret_excess']) # Causes all me to be dropped
 
     size = crsp.query("date.dt.month == 6").copy()
-    size['sorting_date'] = size['date'] + pd.DateOffset(days=1, months=1)
-    size = size[['permno', 'exchcd', 'sorting_date', 'mktcap']].rename(columns={'mktcap': 'size'})
+    size['sorting_date'] = size['date'] + pd.offsets.MonthEnd(1)
+    size = size[['permno', 'exchange', 'sorting_date', 'mktcap']].rename(columns={'mktcap': 'size'})
     # print(size.head())
 
     me = crsp.query("date.dt.month == 12").copy()
-    me['sorting_date'] = me['date'] + pd.DateOffset(months=7)
+    me['sorting_date'] = me['date'] + pd.offsets.MonthEnd(7)
     me = me[['permno', 'gvkey', 'sorting_date', 'mktcap']].rename(columns={'mktcap': 'me'})
     # print(me.head())
 
@@ -238,7 +285,6 @@ def build_panel(
     crsp['sorting_date'] = crsp['date'].apply(lambda x: pd.to_datetime(str(x.year - 1) + '-07-31') if x.month <= 6 else pd.to_datetime(str(x.year) + '-07-31'))
 
     portfolios = crsp.merge(portfolios, on=['sorting_date', 'permno'], how='inner')
-    # portfolios = portfolios.dropna(subset=['excess_ret', 'mktcap_lag'])
     print(portfolios.head())
 
     return portfolios
