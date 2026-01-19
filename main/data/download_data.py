@@ -110,6 +110,8 @@ def download_files(
                 get_crsp_monthly,
                 wrds_username=wrds_username,
                 wrds_password=wrds_password,
+                start_date=start_date.replace('-', ''),
+                end_date=end_date.replace('-', '')
             ),
         },
         {

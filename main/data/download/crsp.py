@@ -6,8 +6,8 @@ import wrds
 def get_crsp_monthly(
     wrds_username: str,
     wrds_password: str,
-    CRSP_START_DATE="20070101",
-    CRSP_END_DATE="20241231",
+    start_date: str="19260701",
+    end_date: str="20251231",
 ) -> pd.DataFrame:
     """
     Download CRSP monthly stock file data and return a DataFrame.
@@ -32,7 +32,7 @@ def get_crsp_monthly(
     and a.date<=b.nameendt
     where b.SHRCD between 10 and  11
     and b.EXCHCD between 1 and  3
-    and a.date >= '{CRSP_START_DATE}' and a.date <= '{CRSP_END_DATE}'  """
+    and a.date >= '{start_date}' and a.date <= '{end_date}'  """
 
     df = conn.raw_sql(query)
     df["date"] = pd.to_datetime(df["date"])
