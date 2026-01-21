@@ -64,6 +64,16 @@ def get_credentials() -> Tuple[Union[str, None], Union[str, None], Union[str, No
 
     return fred_api_key, wrds_username, wrds_password
 
+def replication_score(replicated_factor: np.ndarray, benchmark_factor: np.ndarray) -> float:
+
+    score = (
+        50 * np.corrcoef(replicated_factor, benchmark_factor) + 
+        25 * (1 - np.abs(replicated_factor.mean() - benchmark_factor.mean())) +
+        25 * (1 - np.abs(replicated_factor.std() - benchmark_factor.std()))    
+    )
+
+    return score[0,1]
+
 @hydra.main(version_base=None, config_path="./conf", config_name="config")
 def main(cfg: DictConfig):
     fig_dir, tab_dir, data_dir, download_dir, open_dir, clean_dir, restricted_dir, preprocess_dir, tmp_dir = get_directories()
@@ -137,13 +147,30 @@ def main(cfg: DictConfig):
         })
         )
     )
-    print(hml.head())
+    # print(hml.head())
+    hml_int = (panel
+        .groupby(['size_portfolio', 'bm_int_portfolio', 'date'])
+        .apply(lambda x: pd.Series({
+        "ret": np.average(x["ret_excess"], weights=x["mktcap_lag"])
+        })
+        )
+    )
 
     hml = (hml
         .reset_index()
         .groupby('date')
         .apply(lambda x: pd.Series({
-            'hml': x['ret'][x['bm_portfolio'] == 3].mean() - x['ret'][x['bm_portfolio'] == 1].mean()
+            'hml': x['ret'][x['bm_portfolio'] == 3].mean() - x['ret'][x['bm_portfolio'] == 1].mean(),
+        })
+        )
+        .reset_index()
+    )
+
+    hml_int = (hml_int
+        .reset_index()
+        .groupby('date')
+        .apply(lambda x: pd.Series({
+            'hml_int': x['ret'][x['bm_int_portfolio'] == 3].mean() - x['ret'][x['bm_int_portfolio'] == 1].mean(),
         })
         )
         .reset_index()
@@ -160,17 +187,24 @@ def main(cfg: DictConfig):
     ff = pd.read_parquet(latest_parquet)
     logging.info(f"Loaded Fama-French data from {latest_parquet}")
 
+    # Load latest EKP HML 
+    files = list(download_dir.glob("ekp_hml_*.parquet"))
+    if not files:
+        raise FileNotFoundError(f"No EKP Parquet files found in {download_dir} matching ekp_hml_*.parquet")
+
+    # filenames include a sortable timestamp (YYYYMMDD_HHMMSS) so the max name is the latest
+    latest_parquet = max(files, key=lambda p: p.name)
+    ekp_hml = pd.read_parquet(latest_parquet)
+    logging.info(f"Loaded EKP HML data from {latest_parquet}")
+
+
     ff = ff.rename(columns={'hml': 'hml_ff'})
     hml = hml.merge(ff, on='date', how='left').dropna()
     print(hml.head())
-    # Perform evaluation
-    score = (
-        50 * np.corrcoef(hml['hml'].values, hml['hml_ff'].values) + 
-        25 * (1 - np.abs(hml['hml'].mean() - hml['hml_ff'].mean())) +
-        25 * (1 - np.abs(hml['hml'].std() - hml['hml_ff'].std()))    
-    )
 
-    print(score[0,1])
+    # Perform evaluation
+    ff_score = replication_score(hml['hml'].values, hml['hml_ff'].values)
+    print(f"HML replication grade: {ff_score}")
 
     fig, ax = plt.subplots()
 
@@ -186,6 +220,21 @@ def main(cfg: DictConfig):
     lr = smf.ols('hml_ff ~ hml', data=hml).fit()
     print(lr.summary())
 
+    hml_int = hml_int.merge(ekp_hml, on='date', how='inner')
+    ekp_score = replication_score(hml_int['hml_int'].values, hml_int['hml_int_t100'].values)
+    print(f"HML_INT replication grade: {ekp_score}")
+
+    fig, ax = plt.subplots()
+
+    ax.plot(hml_int['date'], hml_int['hml_int'], label='HML_INT')
+    ax.plot(hml_int['date'], hml_int['hml_int_t100'], label='HML_INT EKP')
+    ax.legend()
+    ax.set_xlabel('Date')
+    ax.set_ylabel('HML_INT')
+    ax.set_title('HML_INT Factor Comparison')
+    plt.show()
+
+    print(f"Average replication score: {(ff_score + ekp_score) / 2}")
 
 if __name__ == "__main__":
     main()
