@@ -9,14 +9,12 @@ from tqdm import tqdm
 
 from ..utils.files import get_latest_file, timestamp_file
 from .download import (
-    # get_compustat_gic_codes,
     get_compustat,
-    # get_crsp_cfacshr,
     get_crsp_compu_link_table,
-    # get_crsp_dates,
     get_crsp_monthly,
     get_ff5_factors_monthly,
     get_ff_size_bp,
+    get_ekp_hml
 )
 
 
@@ -100,6 +98,16 @@ def download_files(
                 wrds_password=wrds_password,
                 start_date=start_date.replace('-', '/'),
                 end_date=end_date.replace('-', '/')
+            ),
+        },
+        # EKP HML task
+        {
+            "file": cache_dir / "ekp_hml.parquet",
+            "name": "EKP HML",
+            "download_func": partial(
+                get_ekp_hml,
+                cache_dir=cache_dir,
+                overwrite=ignore_cache,
             ),
         },
         # CRSP tasks

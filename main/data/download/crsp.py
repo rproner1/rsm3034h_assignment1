@@ -35,15 +35,14 @@ def get_crsp_monthly(
     # and a.date >= '{start_date}' and a.date <= '{end_date}'  """
 
     query = (
-        "SELECT msf.permno, date_trunc('month', msf.mthcaldt)::date AS date, "
-        "msf.mthret AS ret, msf.shrout, msf.mthprc AS altprc, "
+        "SELECT msf.permno, msf.date, msf.ret, msf.shrout, msf.altprc, "
         "ssih.primaryexch, ssih.siccd "
-        "FROM crsp.msf_v2 AS msf "
+        "FROM crsp.msf as msf "
         "INNER JOIN crsp.stksecurityinfohist AS ssih "
         "ON msf.permno = ssih.permno AND "
-        "ssih.secinfostartdt <= msf.mthcaldt AND "
-        "msf.mthcaldt <= ssih.secinfoenddt "
-        f"WHERE msf.mthcaldt BETWEEN '{start_date}' AND '{end_date}' "
+        "ssih.secinfostartdt <= msf.date AND "
+        "msf.date <= ssih.secinfoenddt "
+        f"WHERE msf.date BETWEEN '{start_date}' AND '{end_date}' "
         "AND ssih.sharetype = 'NS' "
         "AND ssih.securitytype = 'EQTY' "  
         "AND ssih.securitysubtype = 'COM' " 
@@ -82,7 +81,7 @@ def get_crsp_compu_link_table(
     conn = wrds.Connection(wrds_username=wrds_username, wrds_password=wrds_password)
 
     query = (
-        "SELECT lpermno AS permno, gvkey, linkdt, linkenddt"
+        "SELECT lpermno AS permno, gvkey, linkdt, linkenddt "
         "FROM crsp.ccmxpf_linktable "
         "WHERE linktype IN ('LU', 'LC') "
         "AND linkprim IN ('P', 'C')"

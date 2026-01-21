@@ -11,14 +11,14 @@ def get_compustat(
     Retrieve data from Compustat.
     """
     query = (
-        "SELECT gvkey, datadate, seq, ceq, at, lt, txditc, txdb, itcb,  pstkrv, "
-        "pstkl, pstk, capx, oancf, sale, cogs, xint, xsga "
+        "SELECT gvkey, datadate, seq, ceq, at, lt, txditc, txdb, itcb, pstkrv, "
+        "pstkl, pstk, capx, oancf, sale, cogs, xint, xsga, gdwl "
         "FROM comp.funda "
         "WHERE indfmt = 'INDL' "
         "AND datafmt = 'STD' "
         "AND consol = 'C' "
         "AND curcd = 'USD' "
-        f"AND datadate BETWEEN '{start_date}' AND '{end_date}'"
+        f"AND datadate BETWEEN '{start_date}' AND '{end_date}' "
     )
 
 
