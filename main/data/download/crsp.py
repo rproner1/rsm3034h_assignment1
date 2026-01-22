@@ -23,9 +23,9 @@ def get_crsp_monthly(
     conn = wrds.Connection(wrds_username=wrds_username, wrds_password=wrds_password)
 
     # query = f"""
-    # select a.date, a.permno, a.shrout, a.cfacpr, a.cfacshr, a.prc, a.vol, a.ret,
+    # select a.date, a.permno, a.shrout, a.altprc, a.vol, a.ret,
     # b.ticker, b.comnam, b.exchcd, b.shrcd, b.ncusip
-    # from crsp.msf_v2 as a
+    # from crsp.msf as a
     # left join crsp.dsenames as b
     # on a.PERMNO=b.PERMNO
     # and b.namedt<=a.date
@@ -35,13 +35,16 @@ def get_crsp_monthly(
     # and a.date >= '{start_date}' and a.date <= '{end_date}'  """
 
     query = (
-        "SELECT msf.permno, msf.date, msf.ret, msf.shrout, msf.altprc, "
-        "ssih.primaryexch, ssih.siccd "
+        "SELECT msf.permno, msf.date, msf.ret, msf.shrout, msf.altprc as prc, "
+        "ssih.primaryexch, ssih.siccd, "
+        "msedl.dlstcd, msedl.dlret, msedl.dlstdt "
         "FROM crsp.msf as msf "
         "INNER JOIN crsp.stksecurityinfohist AS ssih "
         "ON msf.permno = ssih.permno AND "
         "ssih.secinfostartdt <= msf.date AND "
         "msf.date <= ssih.secinfoenddt "
+        "LEFT JOIN crsp.msedelist AS msedl "
+        "ON msf.permno = msedl.permno AND msf.date = msedl.dlstdt "
         f"WHERE msf.date BETWEEN '{start_date}' AND '{end_date}' "
         "AND ssih.sharetype = 'NS' "
         "AND ssih.securitytype = 'EQTY' "  
@@ -58,7 +61,7 @@ def get_crsp_monthly(
 
     # push date to the end of the month
     df["date"] = df["date"] + pd.offsets.MonthEnd(0)
-    df["altprc"] = np.abs(df["altprc"])
+    df["prc"] = np.abs(df["prc"])
     df["permno"] = df["permno"].astype(int)
 
     conn.close()

@@ -208,12 +208,13 @@ def main(cfg: DictConfig):
 
     fig, ax = plt.subplots()
 
-    ax.plot(hml['date'], hml['hml'], label='HML')
-    ax.plot(hml['date'], hml['hml_ff'], label='HML FF')
+    ax.plot(hml['date'], hml['hml'] - hml['hml_ff'], label='HML Diff')
+    # ax.plot(hml['date'], hml['hml_ff'], label='HML FF')
     ax.legend()
     ax.set_xlabel('Date')
-    ax.set_ylabel('HML')
-    ax.set_title('HML Factor Comparison')
+    ax.set_ylabel('HML Difference')
+    ax.set_title('Replicated HML Factor Comparison with Fama-French HML')
+    plt.savefig(fig_dir / "hml_comparison.png")
     plt.show()
 
     # Regress hml_ff on hml
@@ -226,12 +227,13 @@ def main(cfg: DictConfig):
 
     fig, ax = plt.subplots()
 
-    ax.plot(hml_int['date'], hml_int['hml_int'], label='HML_INT')
-    ax.plot(hml_int['date'], hml_int['hml_int_t100'], label='HML_INT EKP')
+    ax.plot(hml_int['date'], hml_int['hml_int'] - hml_int['hml_int_t100'], label='HML_INT Diff')
+    # ax.plot(hml_int['date'], hml_int['hml_int_t100'], label='HML_INT EKP')
     ax.legend()
     ax.set_xlabel('Date')
-    ax.set_ylabel('HML_INT')
-    ax.set_title('HML_INT Factor Comparison')
+    ax.set_ylabel('HML_INT Difference')
+    ax.set_title('Replicated HML_INT Factor Comparison with EKP HML_INT')
+    plt.savefig(fig_dir / "hml_int_comparison.png")
     plt.show()
 
     print(f"Average replication score: {(ff_score + ekp_score) / 2}")
