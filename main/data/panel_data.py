@@ -45,42 +45,6 @@ def assign_industry(siccd):
     else:
         return "Missing"
 
-# def calculate_intangibles(df, sga_growth_rate=0.1, depreciation_rate=0.2):
-
-#     logging.info("Calculating intangibles. This may take a while...")
-#     df_sorted = df.sort_values(['gvkey', 'datadate'])
-#     int_0 = df_sorted['xsga'] / (sga_growth_rate + depreciation_rate)
-#     df_sorted['int'] = int_0
-#     # df_sorted['firm_index'] = df_sorted.groupby('gvkey').cumcount()
-
-#     for gvkey in df_sorted['gvkey'].unique():
-#         firm_data = df_sorted[df_sorted['gvkey'] == gvkey]
-#         int_0 = firm_data.iloc[0]['int']
-#         for i in range(1, len(firm_data)):
-#             prev_int = firm_data.iloc[i - 1]['int']
-#             current_sga = firm_data.iloc[i]['xsga']
-#             updated_int = (1 - depreciation_rate) * prev_int + current_sga
-#             df_sorted.loc[firm_data.index[i], 'int'] = updated_int
-
-#     df = df.merge(df_sorted[['gvkey', 'datadate', 'int']], on=['gvkey', 'datadate'], how='left')
-
-#     return df
-
-# def calculate_intangibles(df, firm_col='gvkey', date_col='datadate', sga_col='xsga', g=0.1, delta=0.2):
-#     def calc_int(series):
-#         xsga = series[sga_col].values
-#         int_vals = np.empty(len(xsga))
-#         int_vals[0] = xsga[0] / (g + delta) if not pd.isna(xsga[0]) else 0
-#         for t in range(1, len(xsga)):
-#             if pd.isna(int_vals[t-1]) or pd.isna(xsga[t]):
-#                 int_vals[t] = np.nan
-#             else:
-#                 int_vals[t] = (1 - delta) * float(int_vals[t-1]) + float(xsga[t])
-#         return pd.Series(int_vals, index=series.index)
-#     df_sorted = df.sort_values([firm_col, date_col])
-#     int = df_sorted.groupby(firm_col).apply(calc_int)
-#     return int
-
 def calculate_intangibles(df, firm_col='gvkey', date_col='datadate', sga_col='xsga', g=0.1, delta=0.2):
     """
     Compute intangible assets (INT) for each firm-year and return a DataFrame with keys for merging.
@@ -113,6 +77,28 @@ def calculate_intangibles(df, firm_col='gvkey', date_col='datadate', sga_col='xs
         }))
     return pd.concat(results, ignore_index=True)
 
+def assign_delisting_reason(dlstcd):
+    """
+    Assign delisting reason based on dlstcd code.
+    Args:
+        dlstcd: delisting code
+    Returns:
+        delisting reason as string
+    """
+    if pd.isna(dlstcd):
+        return "Not Delisted"
+    elif 200 <= dlstcd <= 240:
+        return "Merger"
+    elif 300 <= dlstcd <= 390:
+        return "Exchange"
+    elif dlstcd == 400:
+        return "Liquidation"
+    elif 501 <= dlstcd <= 519:
+        return "Change Exchange"
+    elif (dlstcd == 500) or (520 <= dlstcd <= 584):
+        return "Performance"
+        
+
 # load crsp file
 def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     logging.info("Loading CRSP data...")
@@ -121,8 +107,18 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     crsp["year_month"] = crsp["date"].dt.to_period("M")
     crsp = crsp.rename(columns={"ncusip": "cusip"})
 
+    # Rename exchange code and industry code.
+    crsp['exchange'] = crsp['primaryexch'].apply(assign_exchange)
+    crsp['industry'] = crsp['siccd'].apply(assign_industry)
+
+    # Adust for delisting return
+    crsp['dlrsn'] = crsp['dlstcd'].apply(assign_delisting_reason)
+    crsp['dlret'][(crsp['dlrsn'] == 'Performance') & (crsp['exchange'].isin(['NYSE', 'AMEX']))] = -0.3
+    crsp['dlret'][(crsp['dlrsn'] == 'Performance') & (crsp['exchange'] == 'NASDAQ')] = -0.55
+    crsp['ret'] = (1+crsp['ret']) * (1+crsp['dlret'].fillna(0)) - 1
+
     # Compute market cap (ME) and scale by millions
-    crsp['mktcap'] = crsp['shrout'] * crsp['altprc'] / 1000000
+    crsp['mktcap'] = crsp['shrout'] * crsp['prc'] / 1000000
     crsp['mktcap'] = crsp['mktcap'].replace(0, np.nan)
     
     # print(crsp[crsp.date.dt.month == 12])
@@ -133,10 +129,6 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     mktcap_lag = mktcap_lag[["permno", "date", "mktcap_lag"]]
     crsp = crsp.merge(mktcap_lag, on=["permno", "date"], how="left")
     # print(crsp[crsp.date.dt.month == 12])
-
-    # Rename exchange code and industry code.
-    crsp['exchange'] = crsp['primaryexch'].apply(assign_exchange)
-    crsp['industry'] = crsp['siccd'].apply(assign_industry)
 
     # Compute excess returns
     ff = pd.read_parquet(get_latest_file(path / "ff5_monthly.parquet"))
@@ -248,70 +240,6 @@ def assign_portfolio(df: pd.DataFrame, sorting_variable: str, percentiles: list)
     )
     
     return assigned_portfolios
-
-def load_gic(df: pd.DataFrame, path: Path) -> pd.DataFrame:
-    """
-    Loads the GIC dataset from compustat.
-    """
-    gic = pd.read_parquet(get_latest_file(path / "compustat_gic_codes.parquet"))
-    gic["indthru"] = gic["indthru"].fillna(pd.to_datetime(CRSP_END_DATE))
-    gic = gic[["gvkey", "gsector", "ggroup", "indfrom", "indthru"]]
-
-    df = df.merge(gic, on="gvkey", how="left")
-    df = df[df["date"].between(df["indfrom"], df["indthru"])]
-
-    return df.drop(columns=["indfrom", "indthru"])
-
-
-def clean_panel_data(df: pd.DataFrame, path: Path) -> None:
-    # additional year, month, day columns
-    # df["year"] = df["date"].dt.year
-    # df["month"] = df["date"].dt.month
-
-    # # Convert date to end of month
-    # df["year_month"] = df["date"] + pd.offsets.MonthEnd(0)
-
-    # # remove obs with no returns
-    # df = df[df["ret"].notna()]
-    # df = df[df["prc"].notna()]
-    # # compute overnight returns
-    # # open to close returns
-    # df["ret_oc"] = (df["prc"] - df["openprc"]) / df["openprc"]
-    # # overnight returns
-    # df["ret_on"] = (1 + df["ret"]) / (1 + df["ret_oc"]) - 1
-    # df["abs_ret"] = df["ret"].abs()
-    # df["abn_ret"] = df["ret"] - df["mkt"]
-    # df["neg_ret"] = (df["ret"] < 0).astype(int)
-    # df["neg_abn_ret"] = (df["abn_ret"] < 0).astype(int)
-    # df["abs_abn_ret"] = df["abn_ret"].abs()
-    # # market capitalization
-    # df["mcap"] = df["prc"] * df["shrout"] * 1000
-    # df["ln_mcap"] = np.log(df["mcap"])
-    # df = assign_mcap_breakpoints(df)
-
-    # # fillna for earnings announcement
-    # df["ea"] = df["ea"].fillna(0)
-
-    # # keep stocks with gsector
-    # df = df[df["gsector"].notna()]
-
-    # # Add dummy for monday to friday
-    # df["day_mon"] = (df["date"].dt.dayofweek == 0).astype(int)
-    # df["day_tue"] = (df["date"].dt.dayofweek == 1).astype(int)
-    # df["day_wed"] = (df["date"].dt.dayofweek == 2).astype(int)
-    # df["day_thu"] = (df["date"].dt.dayofweek == 3).astype(int)
-    # df["day_fri"] = (df["date"].dt.dayofweek == 4).astype(int)
-
-    # # remove weekends from df
-    # df = df[df["date"].dt.dayofweek < 5]
-
-    # # by permno, compute cumulative returns over the past 5 days
-    # df = df.sort_values(["permno", "date"])
-    # df["ln_ret"] = np.log(1 + df["ret"])
-
-    # adust for delisted returns
-
-    return df
 
 
 def build_panel(
