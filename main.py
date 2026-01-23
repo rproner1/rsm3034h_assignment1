@@ -236,6 +236,10 @@ def main(cfg: DictConfig):
     plt.savefig(fig_dir / "hml_int_comparison.png")
     plt.show()
 
+    # Regress hml_ff on hml
+    lr = smf.ols('hml_int_t100 ~ hml_int', data=hml_int).fit()
+    print(lr.summary())
+
     print(f"Average replication score: {(ff_score + ekp_score) / 2}")
 
 if __name__ == "__main__":

@@ -1,0 +1,4 @@
+[2026-01-22 10:15:04,450][root][INFO] - Setting up matplotlib configuration
+[2026-01-22 10:15:04,986][root][INFO] - Loaded existing panel data from /home/rproner/Documents/Data/rsm3034_assignment1/clean/panel_data.parquet
+[2026-01-22 10:15:08,437][root][INFO] - Loaded Fama-French data from /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ff5_monthly_20260121_213956.parquet
+[2026-01-22 10:15:08,439][root][INFO] - Loaded EKP HML data from /home/rproner/Documents/Data/rsm3034_assignment1/download_cache/ekp_hml_20260121_214026.parquet
