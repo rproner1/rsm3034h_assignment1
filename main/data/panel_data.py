@@ -121,14 +121,12 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     crsp['mktcap'] = crsp['shrout'] * crsp['prc'] / 1000000
     crsp['mktcap'] = crsp['mktcap'].replace(0, np.nan)
     
-    # print(crsp[crsp.date.dt.month == 12])
     # create lagged market cap
     mktcap_lag = crsp.copy()
     mktcap_lag['date'] = mktcap_lag['date'] + pd.offsets.MonthEnd(1)
     mktcap_lag = mktcap_lag.rename(columns={"mktcap": "mktcap_lag"})
     mktcap_lag = mktcap_lag[["permno", "date", "mktcap_lag"]]
     crsp = crsp.merge(mktcap_lag, on=["permno", "date"], how="left")
-    # print(crsp[crsp.date.dt.month == 12])
 
     # Compute excess returns
     ff = pd.read_parquet(get_latest_file(path / "ff5_monthly.parquet"))
@@ -138,7 +136,6 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
     crsp['ret_excess'] = crsp['ret'] - crsp['rf']
     crsp['ret_excess'] = crsp['ret_excess'].clip(lower=-1)
     crsp = crsp.drop(columns=['rf'])
-
     
     crsp = crsp.dropna(subset=['ret_excess', 'mktcap', 'mktcap_lag'])
 
@@ -152,8 +149,7 @@ def load_crsp_file(path: Path, start_date: str, end_date: str) -> pd.DataFrame:
 
     crsp = crsp.merge(ccm_links, on=['permno', 'date'], how='left')
 
-    # drop_duplicates
-    # crsp = crsp.drop_duplicates(subset=["permno", "date"])
+    crsp = crsp.drop_duplicates(subset=["permno", "date"])
 
     return crsp
 
@@ -173,7 +169,6 @@ def load_compustat_data(path: Path) -> pd.DataFrame:
         + comp['txditc'].combine_first(comp['txdb'] + comp['itcb']).fillna(0)
         - comp['pstk'].combine_first(comp['pstkrv']).combine_first(comp['pstkl']).fillna(0)
     )
-    # Note to self. Try replacing sale with reserves
     comp['be'] = comp['be'].apply(lambda x: np.nan if x <= 0 else x)
 
     comp['be_int'] = comp['be'] - comp['gdwl'].fillna(0) + comp['int'].fillna(0)
@@ -197,31 +192,6 @@ def load_compustat_data(path: Path) -> pd.DataFrame:
     comp['inv'] = np.where(comp['at_lag'].fillna(-1) <= 0, np.nan, comp['inv'])
 
     return comp
-
-def load_fama_french_returns_data(df: pd.DataFrame, path: Path) -> pd.DataFrame:
-    ff = pd.read_parquet(get_latest_file(path / "ff5_monthly.parquet"))
-    ff["date"] = pd.to_datetime(ff["date"])
-    ff["mkt"] = ff["mkt_rf"] + ff["rf"]
-
-    return df.merge(ff, on="date", how="left")
-
-
-def load_fama_french_me_breakpoints(df: pd.DataFrame, path: Path) -> pd.DataFrame:
-    ff_me = pd.read_parquet(get_latest_file(path / "ff_size_breakpoints.parquet"))
-    # keep only the 20th percentile cuts
-    ff_me = ff_me[["date", "size_bp4", "size_bp8", "size_bp12", "size_bp16"]].rename(
-        columns={
-            "size_bp4": "ff_me_20",
-            "size_bp8": "ff_me_40",
-            "size_bp12": "ff_me_60",
-            "size_bp16": "ff_me_80",
-        }
-    )
-
-    ff_me["year_month"] = ff_me["date"].dt.to_period("M")
-
-    return df.merge(ff_me.drop(columns="date"), on=["year_month"], how="left")
-
 
 def assign_portfolio(df: pd.DataFrame, sorting_variable: str, percentiles: list) -> pd.Series:
     """Assign portfolios to a bin according to a sorting variable."""

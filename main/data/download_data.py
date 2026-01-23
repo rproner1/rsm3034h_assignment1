@@ -82,12 +82,12 @@ def download_files(
             "file": cache_dir / "ff_size_breakpoints.parquet",
             "name": "Fama-French Size Breakpoints",
             "download_func": get_ff_size_bp,
-        }, # We can compare our breakpoints to that of FF for debugging.
+        },
         {
             "file": cache_dir / "ff5_monthly.parquet",
             "name": "Fama-French 5 Factors Monthly",
             "download_func": get_ff5_factors_monthly,
-        }, # We can compare our replication to the FF factors for debugging.
+        },
         # Compustat tasks
         {
             "file": cache_dir / "compustat.parquet",
